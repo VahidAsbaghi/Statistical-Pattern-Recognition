@@ -1,0 +1,35 @@
+function phat=knn_dens(N,K,bound)
+a=bound(1);
+b=bound(2);
+px=1/(b-a);
+i=a;
+l=1;
+while i<=b
+    smpl(l)=i;
+    l=l+1;
+    i=i+0.0001;
+end
+i=1;
+while i<=N
+    prand=rand;
+    rr=randi([1,length(smpl)]);
+    if prand>px
+        sel_samp(i)=smpl(rr);
+        i=i+1;
+    end
+end
+
+
+for j=1:N
+    dist(:,j)=abs(sel_samp-sel_samp(j));
+[dist(:,j),IX(:,j)]=sort(dist(:,j),'ascend');
+end
+
+for i=1:N
+    nbr(i)=IX(i,K+1);
+    dis_nbr(i)=dist(i,K+1);
+    phat(i)=K/(N*2*dis_nbr(i));
+end
+[sel_samp_sort,I]=sort(sel_samp);
+phat(1:N)=phat(I);
+end

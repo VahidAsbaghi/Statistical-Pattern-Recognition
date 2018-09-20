@@ -1,0 +1,94 @@
+function [nrst_nbr,nrst_nbrv]=KNN_KDTree(inp,K,inp_tr)
+tr_in=kdtree(inp_tr,1);
+[x,~]=size(tr_in);
+L=length(inp);
+best_dist=zeros(L,K);
+nrst_nbr=zeros(L,K);
+nrst_nbrv=cell(L,K);
+for l=1:L
+    i=1;
+    tr=tr_in;
+    while i<=K
+        s=cell(1,200);
+        s{1}=[tr(1,:) -1];
+        best_dist(l,i)=50;
+        j=1;
+        while j<=x
+            if isempty(s{j}) || s{j}(:,1)==-10
+                j=j+1;
+                continue;
+            end
+            tr1(j,:)=s{j};
+            if tr1(j,4)==-1
+                dist(l,i)=((inp(l,1)-tr1(j,1))^2+(inp(l,2)-tr1(j,2))^2)^0.5;
+                best_dist(l,i)=dist(l,i);
+                nrst_nbr(l,i)=j;
+            else
+                dist(l,i)=tr1(j,4);
+            end
+            jj=round(log(j));
+            if rem(jj,2)==0
+                jj=1;
+            else
+                jj=2;
+            end
+            if (inp(l,jj)>tr1(j,jj))
+                side='right';
+            else
+                side='left';
+            end
+            if 2*j<x
+                dist_l=((inp(l,1)-tr(2*j,1))^2+(inp(l,2)-tr(2*j,2))^2)^0.5;
+                dist_r=((inp(l,1)-tr(2*j+1,1))^2+(inp(l,2)-tr(2*j+1,2))^2)^0.5;
+                if  dist(l,i)>dist_l && dist(l,i)>dist_r
+                    s{2*j}=[tr(2*j,:) dist_l];
+                    s{2*j+1}=[tr(2*j+1,:) dist_r];
+                    if dist(l,i)<=best_dist(l,i)
+                        best_dist(l,i)=dist(l,i);
+                        nrst_nbr(l,i)=j;
+                    end
+                elseif dist(l,i)<dist_l && dist(l,i)<dist_r
+                    s{2*j}=[tr(2*j,:) dist_l];
+                    s{2*j+1}=[tr(2*j+1,:) dist_r];
+                    if dist_l<dist_r && dist_l<=best_dist(l,i)
+                        best_dist(l,i)=dist_l;
+                        nrst_nbr(l,i)=2*j;
+                    elseif dist_l>dist_r && dist_r<=best_dist(l,i)
+                        best_dist(l,i)=dist_r;
+                        nrst_nbr(l,i)=2*j+1;
+                    end
+                elseif strcmp(side,'right') && dist_r<dist(l,i)
+                    s{2*j}=[];
+                    s{2*j+1}=[tr(2*j+1,:) dist_r];
+                    if dist_r<=best_dist(l,i)
+                        best_dist(l,i)=dist_r;
+                        nrst_nbr(l,i)=2*j+1;
+                    end
+                elseif strcmp(side,'left') && dist_l<dist(l,i)
+                    s{2*j}=[tr(2*j,:) dist_l];
+                    s{2*j+1}=[];
+                    if dist_l<=best_dist(l,i)
+                        best_dist(l,i)=dist_l;
+                        nrst_nbr(l,i)=2*j;
+                    end
+                end
+            elseif best_dist(l,i)>=dist(l,i)
+                best_dist(l,i)=dist(l,i);
+                nrst_nbr(l,i)=j;
+            end
+            j=j+1;
+        end
+        nrst_nbrv{l,i}=tr(nrst_nbr(l,i),:);
+        tr(nrst_nbr(l,i),:)=[-10,-10,0];
+        ll=1;
+         for llp=1:length(tr)
+            if tr(llp,1)~=-10
+                inp1(ll,:)=tr(llp,:);
+                ll=ll+1;
+            end
+         end
+        i=i+1;
+        tr=kdtree(inp1,1);
+    end
+end
+end
